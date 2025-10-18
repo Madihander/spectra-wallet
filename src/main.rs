@@ -54,14 +54,21 @@ fn main() -> Result<()> {
     let (secret_key_ed, public_key_ed) = keygen::generate_ed25519(&image_hash)?;
     let (secret_key_secp, public_key_secp) = keygen::generate_secp256k1(&image_hash)?;
 
-    println!("## Generated keys:");
-    println!("# ED256619 keys:");
+    println!("## Generated keys ##");
+    println!("### SOLANA (Ed25519) ###");
     println!("Secret Key: {}", hex::encode(&secret_key_ed.as_bytes()));
     println!("Public  Key: {}", hex::encode(&public_key_ed.as_bytes()));
-    println!("");
-    println!("# SECP256K1 keys:");
+    println!("Address: {}\n", keygen::generate_solana_address(&public_key_ed));
+
+    println!("### ETHEREUM (Secp256k1) ###");
     println!("Secret Key: {}", hex::encode(&secret_key_secp.secret_bytes()));
     println!("Public  Key: {}", hex::encode(&public_key_secp.serialize_uncompressed()));
+    println!("Address: {}\n", keygen::generate_ethereum_address(&public_key_secp));
+
+    println!("### BITCOIN (Secp256k1) ###");
+    println!("Secret Key: {}", hex::encode(&secret_key_secp.secret_bytes()));
+    println!("Public  Key: {}", hex::encode(&public_key_secp.serialize_uncompressed()));
+    println!("Address: {}\n", keygen::generate_bitcoin_address(&public_key_secp));
 
     Ok(())
 }
