@@ -51,12 +51,17 @@ fn main() -> Result<()> {
     // println!("TYPE OF IMAGE HASH");
     // print_type(&image_hash);
     
-    let (private_key, public_key) = keygen::generate_ed25519(&image_hash)?;
+    let (secret_key_ed, public_key_ed) = keygen::generate_ed25519(&image_hash)?;
+    let (secret_key_secp, public_key_secp) = keygen::generate_secp256k1(&image_hash)?;
 
     println!("## Generated keys:");
-    println!("Private Key: {}", hex::encode(private_key.as_bytes()));
-    println!("Public  Key: {}", hex::encode(public_key.as_bytes()));
-    // Private Key: 8188f85cac9111189b59db6b9b09ca0e497bb00f33af6da15e18c2043f0ac9a0
-    // Public  Key: c7bea50ccd47af6f924718d46e16568b1a7d5b098d9e64e8eac7e73b5fecd9eb 
+    println!("# ED256619 keys:");
+    println!("Secret Key: {}", hex::encode(&secret_key_ed.as_bytes()));
+    println!("Public  Key: {}", hex::encode(&public_key_ed.as_bytes()));
+    println!("");
+    println!("# SECP256K1 keys:");
+    println!("Secret Key: {}", hex::encode(&secret_key_secp.secret_bytes()));
+    println!("Public  Key: {}", hex::encode(&public_key_secp.serialize_uncompressed()));
+
     Ok(())
 }
