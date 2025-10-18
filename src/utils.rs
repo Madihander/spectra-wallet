@@ -7,3 +7,7 @@ pub fn random_bytes(n: usize) -> Vec<u8> {
     rng.fill_bytes(&mut v);
     v
 }
+
+fn print_type<T>(_: &T) {
+    println!("{}", std::any::type_name::<T>());
+}
