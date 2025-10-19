@@ -2,10 +2,18 @@ use anyhow::Result;
 use clap::{ValueEnum, Parser};
 use std::path::PathBuf;
 
+
+mod keygen{
+    pub mod generator;
+    pub mod keypair;
+}
+use keygen::generator::{WalletGenerator};
+use keygen::keypair::{KeyPair};
+
+
 mod entropy;
 mod hash;
 mod image_loader;
-mod keygen;
 mod utils;
 
 
@@ -26,9 +34,8 @@ struct Args {
     #[arg(short, long)]
     password: Option<String>,
 
-    // use secp256k1 instead of ed25519
-    #[arg(long, default_value_t = false)]
-    secp256k1: bool,
+    // #[arg(short, long)]
+    // blockchain: Option<String>,
 
     // Add random salt (non-deterministic generation)
     #[arg(long, default_value_t = false)]
@@ -50,25 +57,17 @@ fn main() -> Result<()> {
     // println!("{:#?}", image_hash);
     // println!("TYPE OF IMAGE HASH");
     // print_type(&image_hash);
-    
-    let (secret_key_ed, public_key_ed) = keygen::generate_ed25519(&image_hash)?;
-    let (secret_key_secp, public_key_secp) = keygen::generate_secp256k1(&image_hash)?;
 
-    println!("## Generated keys ##");
-    println!("### SOLANA (Ed25519) ###");
-    println!("Secret Key: {}", hex::encode(&secret_key_ed.as_bytes()));
-    println!("Public  Key: {}", hex::encode(&public_key_ed.as_bytes()));
-    println!("Address: {}\n", keygen::generate_solana_address(&public_key_ed));
-
-    println!("### ETHEREUM (Secp256k1) ###");
-    println!("Secret Key: {}", hex::encode(&secret_key_secp.secret_bytes()));
-    println!("Public  Key: {}", hex::encode(&public_key_secp.serialize_uncompressed()));
-    println!("Address: {}\n", keygen::generate_ethereum_address(&public_key_secp));
-
-    println!("### BITCOIN (Secp256k1) ###");
-    println!("Secret Key: {}", hex::encode(&secret_key_secp.secret_bytes()));
-    println!("Public  Key: {}", hex::encode(&public_key_secp.serialize_uncompressed()));
-    println!("Address: {}\n", keygen::generate_bitcoin_address(&public_key_secp));
-
+    let keypairs: Vec<KeyPair> = ["solana", "ethereum", "bitcoin"]
+        .iter()
+        .map(|&chain| WalletGenerator::generate(&image_hash, chain))
+        .collect::<Result<_>>()?;
+    // }
+    for (i, keypair) in keypairs.iter().enumerate() {
+        println!("KeyPair {} :",keypair.get_type_blockchain());
+        println!("Secret Key: {} ##",keypair.get_hex_sec());
+        println!("Public Key: {} ##",keypair.get_hex_pub());
+        println!("Address: {} ##\n",keypair.get_address());
+    }
     Ok(())
 }
