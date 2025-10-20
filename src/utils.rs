@@ -8,6 +8,19 @@ pub fn random_bytes(n: usize) -> Vec<u8> {
     v
 }
 
-fn print_type<T>(_: &T) {
+pub fn print_type<T>(_: &T) {
     println!("{}", std::any::type_name::<T>());
+}
+
+pub fn hex_color_to_bytes(hex: &str) -> Vec<u8> {
+    let hex = hex.trim_start_matches('#');
+    if hex.len() != 6 {
+        panic!("Invalid HEX color length");
+    }
+    
+    let r = u8::from_str_radix(&hex[0..2], 16).unwrap();
+    let g = u8::from_str_radix(&hex[2..4], 16).unwrap();
+    let b = u8::from_str_radix(&hex[4..6], 16).unwrap();
+    
+    vec![r, g, b]
 }
