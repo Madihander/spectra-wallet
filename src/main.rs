@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::{ValueEnum, Parser};
 use std::path::PathBuf;
-
+use std::error::Error;
 
 mod keygen{
     pub mod generator;
@@ -17,50 +17,79 @@ mod image_loader;
 mod utils;
 
 
-fn print_type<T>(_: &T) {
+fn print_type<T: ?Sized>(_: &T) {
     println!("{}", std::any::type_name::<T>());
 }
+
+#[derive(Debug, Clone)]
+pub struct WalletSeeds {
+    pub master_seed: [u8; 64],           // Main Seed for key generation
+    pub key_encryption_key: [u8; 64],    // The key for encrypting the private key
+}
+impl WalletSeeds {
+    pub fn new(master_seed: [u8; 64], key_encryption_key: [u8; 64]) -> Self {
+        Self { master_seed, key_encryption_key }
+    }
+}
+
+pub fn generate_wallet_seeds(
+    primary_image:&PathBuf,
+    salt_image: &PathBuf,
+    color: &str,
+) -> Result<WalletSeeds> {
+    // 1) load image -> raw RGB bytes
+    let pixels1 = image_loader::load_image(primary_image)?;
+    let pixels2 = image_loader::load_image(salt_image)?;
+    let color_salt = utils::hex_color_to_bytes(color);
+        
+    // 2) get entropy blob (raw pixels for MVP)
+    let primary_entropy = entropy::entropy_by_frequency(&pixels1, false, 16);
+    let salt_entropy = entropy::from_raw_pixels(&pixels2);
+        
+    // 3) initial hash (Blake2b-512)
+    let master_seed = hash::blake2b_hash(&[primary_entropy, salt_entropy.clone(), color_salt.clone()].concat());
+            
+    // 4) hash for encryption key
+    let key_encryption_key = hash::blake2b_hash(&[salt_entropy, color_salt].concat());    
+    
+    let walletseeds = WalletSeeds::new(master_seed, key_encryption_key);
+    Ok(WalletSeeds::new(master_seed, key_encryption_key))
+    }
+
+
 
 #[derive(Parser, Debug)]
 #[command(name = "mantis_hash")]
 #[command(about = "Generate cryptographic keys from images using visual entropy.")]
 
 struct Args {
-    // Path to image file
-    #[arg(short, long)]
-    image: PathBuf,
+    // Path to first image file
+    #[arg(short = 'f', long = "first")]
+    image1: PathBuf,
 
-    // Optional password (if provided, Argon2id Will be used with image-hash as salt)
-    #[arg(short, long)]
-    password: Option<String>,
+    // Path to second image file
+    #[arg(short = 's', long = "second")]
+    image2: PathBuf,
 
-    // #[arg(short, long)]
-    // blockchain: Option<String>,
+    #[arg(short = 'c', long = "color")]
+    color: String, // HEX #ff1234
 
-    // Add random salt (non-deterministic generation)
-    #[arg(long, default_value_t = false)]
-    randomize: bool,
+    #[arg(short = 'b', long = "blockchain", default_value = "solana")]
+    blockchain:String,
+
 }
 
 fn main() -> Result<()> {
     let args = Args::parse();
+    let wallet = generate_wallet_seeds(&args.image1, &args.image2, &args.color)?;
 
-    // 1) load image -> raw RGB bytes
-    let pixels = image_loader::load_image(&args.image)?;
 
-    // 2) get entropy blob (raw pixels for MVP)
-    let entropy_blob = entropy::from_raw_pixels(&pixels);
-
-    // 3) initial hash (Blake2b-512)
-    let image_hash = hash::blake2b_hash(&entropy_blob); // 64 bytes Vec<u8>
-    // println!("Length of image_hash: {}", image_hash.len());
-    // println!("{:#?}", image_hash);
-    // println!("TYPE OF IMAGE HASH");
-    // print_type(&image_hash);
+    println!("{:?}", wallet.master_seed);
+    println!("{:?}", wallet.key_encryption_key);
 
     let keypairs: Vec<KeyPair> = ["solana", "ethereum", "bitcoin"]
         .iter()
-        .map(|&chain| WalletGenerator::generate(&image_hash, chain))
+        .map(|&chain| WalletGenerator::generate(&wallet.master_seed, chain))
         .collect::<Result<_>>()?;
     // }
     for (i, keypair) in keypairs.iter().enumerate() {
