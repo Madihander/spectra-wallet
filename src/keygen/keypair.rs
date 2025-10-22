@@ -1,18 +1,23 @@
 #[derive(Debug)]
 pub struct KeyPair {
     pub secret_key: Vec<u8>,
+    pub encrypted_secret_key: Vec<u8>,
     pub public_key: Vec<u8>,
     pub address: String,
     pub type_blockchain: String,
 }
 
 impl KeyPair {
-    pub fn new(secret_key: Vec<u8>, public_key: Vec<u8>, address: String, type_blockchain: String) -> Self {
-        Self {secret_key, public_key, address, type_blockchain}
+    pub fn new(secret_key: Vec<u8>, encrypted_secret_key: Vec<u8>, public_key: Vec<u8>, address: String, type_blockchain: String) -> Self {
+        Self {secret_key, encrypted_secret_key, public_key, address, type_blockchain}
     }
 
     pub fn get_bytes_sec(&self) -> &[u8] {
         &self.secret_key
+    }
+
+    pub fn get_bytes_encrypted_sec(&self) -> &[u8] {
+        &self.encrypted_secret_key
     }
 
     pub fn get_bytes_pub(&self) -> &[u8] {
@@ -22,6 +27,11 @@ impl KeyPair {
     pub fn get_hex_sec(&self) -> String {
         hex::encode(&self.secret_key)
     }
+
+    pub fn get_hex_encrypted_sec(&self) -> String {
+        hex::encode(&self.encrypted_secret_key)
+    }
+
     pub fn get_hex_pub(&self) -> String {
         hex::encode(&self.public_key)
     }

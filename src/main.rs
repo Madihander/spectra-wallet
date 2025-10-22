@@ -1,15 +1,18 @@
 use anyhow::Result;
-use clap::{ValueEnum, Parser};
+use clap::{Parser};
 use std::path::PathBuf;
-use std::error::Error;
 
 mod keygen{
     pub mod generator;
     pub mod keypair;
+    pub mod aes_256_gcm;
+
 }
+
+
 use keygen::generator::{WalletGenerator};
 use keygen::keypair::{KeyPair};
-
+use crate::keygen::aes_256_gcm;
 
 mod entropy;
 mod hash;
@@ -84,19 +87,33 @@ fn main() -> Result<()> {
     let wallet = generate_wallet_seeds(&args.image1, &args.image2, &args.color)?;
 
 
-    println!("{:?}", wallet.master_seed);
-    println!("{:?}", wallet.key_encryption_key);
+    // println!("{:?}", wallet.master_seed);
+    // println!("{:?}", wallet.key_encryption_key);
 
     let keypairs: Vec<KeyPair> = ["solana", "ethereum", "bitcoin"]
         .iter()
-        .map(|&chain| WalletGenerator::generate(&wallet.master_seed, chain))
+        .map(|&chain| WalletGenerator::generate(&wallet.master_seed, &wallet.key_encryption_key, chain))
         .collect::<Result<_>>()?;
     // }
     for (i, keypair) in keypairs.iter().enumerate() {
-        println!("KeyPair {} :",keypair.get_type_blockchain());
-        println!("Secret Key: {} ##",keypair.get_hex_sec());
-        println!("Public Key: {} ##",keypair.get_hex_pub());
-        println!("Address: {} ##\n",keypair.get_address());
+        
+        match aes_256_gcm::decrypt_private_key(&keypair.get_bytes_encrypted_sec(), &wallet.key_encryption_key) {
+            Ok(decrypted_bytes) => {
+                let decrypted_secret_key = hex::encode(&decrypted_bytes);
+                
+                println!("KeyPair {} :", keypair.get_type_blockchain());
+                println!("Secret Key: {} ##\n", keypair.get_hex_sec());
+                
+                println!("Encrypted Secret Key: {:?} ##", keypair.get_hex_encrypted_sec());
+                println!("Decrypted Secret Key: {:?} ##\n", decrypted_secret_key);
+                
+                println!("Public Key: {} ##", keypair.get_hex_pub());
+                println!("Address: {} ##\n", keypair.get_address());
+            }
+            Err(e) => {
+                eprintln!("Decryption failed: {}", e);
+            }
+        }
     }
     Ok(())
 }
