@@ -3,7 +3,7 @@ use aes_gcm::{
     Aes256Gcm, Key
 };
 
-pub fn encrypt_private_key(private_key: &[u8], encryption_key: &[u8; 64]) -> Vec<u8> {
+pub fn aes256_encrypt_private_key(private_key: &[u8], encryption_key: &[u8; 64]) -> Vec<u8> {
     // take the first 32 bytes from the hash for the AES key
     let key = Key::<Aes256Gcm>::from_slice(&encryption_key[..32]);
     let cipher = Aes256Gcm::new(key);
@@ -16,7 +16,7 @@ pub fn encrypt_private_key(private_key: &[u8], encryption_key: &[u8; 64]) -> Vec
     [nonce.to_vec(), ciphertext].concat()
 }
 
-pub fn decrypt_private_key(encrypted_data: &[u8], encryption_key: &[u8; 64]) -> Result<Vec<u8>, &'static str> {
+pub fn aes256_decrypt_private_key(encrypted_data: &[u8], encryption_key: &[u8; 64]) -> Result<Vec<u8>, &'static str> {
     let key = Key::<Aes256Gcm>::from_slice(&encryption_key[..32]);
     let cipher = Aes256Gcm::new(key);
     
