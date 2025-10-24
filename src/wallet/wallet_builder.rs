@@ -26,11 +26,23 @@ impl WalletBuilder {
         let seed_array: [u8; 32] = seed[0..32].try_into()
             .map_err(|_| anyhow::anyhow!("Failed to convert slice to array"))?;
     
-        let private_key = SigningKey::from_bytes(&seed_array);
-        let public_key = VerifyingKey::from(&private_key);
+        let (public_key, encrypted_private_key) = {
+            let private_key = SigningKey::from_bytes(&seed_array);
+            let public_key = VerifyingKey::from(&private_key);
+            
+            let private_key_bytes = private_key.to_bytes();
+            let encrypted_private_key = aes256_encrypt_private_key(&private_key_bytes, encryption_key);
+            // 
+            let mut sensetive_date = private_key_bytes;
+            zeroize::Zeroize::zeroize(&mut sensetive_date);
+            
+            (public_key,  encrypted_private_key)
+
+        };
+
         let address = Self::generate_solana_address(&public_key);
         let type_blockchain = String::from("solana");
-        let encrypted_private_key = aes256_encrypt_private_key(&private_key.to_bytes(), &encryption_key);
+        // let encrypted_private_key = aes256_encrypt_private_key(&private_key.to_bytes(), &encryption_key);
 
         Ok(Wallet::new( 
             encrypted_private_key.to_vec(),

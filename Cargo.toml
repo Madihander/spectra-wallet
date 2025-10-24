@@ -7,6 +7,8 @@ edition = "2024"
 anyhow = "1.0"
 clap = { version = "4", features = ["derive"] }
 
+zeroize = "1.8"
+
 image = "0.25"
 blake2 = "0.10"
 aes-gcm = "0.10"
