@@ -13,7 +13,7 @@ use super::Wallet;
 pub struct WalletBuilder;
 
 impl WalletBuilder {
-    pub fn generate(master_seed: &[u8; 64], encryption_key: &[u8; 64], blockchain: &str) -> Result<Wallet> {
+    pub fn generate_wallet(master_seed: &[u8; 64], encryption_key: &[u8; 64], blockchain: &str) -> Result<Wallet> {
         match blockchain.to_lowercase().as_str() {
             "solana" => Self::generate_solana(master_seed, encryption_key),
             "ethereum" => Self::generate_ethereum(master_seed, encryption_key),
@@ -37,12 +37,10 @@ impl WalletBuilder {
             zeroize::Zeroize::zeroize(&mut sensetive_date);
             
             (public_key,  encrypted_private_key)
-
         };
 
         let address = Self::generate_solana_address(&public_key);
         let type_blockchain = String::from("solana");
-        // let encrypted_private_key = aes256_encrypt_private_key(&private_key.to_bytes(), &encryption_key);
 
         Ok(Wallet::new( 
             encrypted_private_key.to_vec(),
@@ -56,11 +54,22 @@ impl WalletBuilder {
         let secp = Secp256k1::new();
         let seed_array: [u8; 32] = seed[0..32].try_into()
             .map_err(|_| anyhow!("Failed to convert slice to array"))?;
-        let private_key = SecretKey::from_byte_array(seed_array)?;
-        let public_key = PublicKey::from_secret_key(&secp, &private_key);
+        
+        let (public_key, encrypted_private_key) = {
+            let private_key = SecretKey::from_byte_array(seed_array)?;
+            let public_key = PublicKey::from_secret_key(&secp, &private_key);
+            
+            let private_key_bytes = private_key.secret_bytes();
+            let encrypted_private_key = aes256_encrypt_private_key(&private_key_bytes, encryption_key);
+            // 
+            let mut sensetive_date = private_key_bytes;
+            zeroize::Zeroize::zeroize(&mut sensetive_date);
+            
+            (public_key,  encrypted_private_key)
+        };
+       
         let address = Self::generate_ethereum_address(&public_key);
         let type_blockchain = String::from("ethereum");
-        let encrypted_private_key = aes256_encrypt_private_key(&private_key.secret_bytes(), &encryption_key);
 
         Ok(Wallet::new(
             encrypted_private_key.to_vec(),
@@ -74,12 +83,22 @@ impl WalletBuilder {
         let secp = Secp256k1::new();
         let seed_array: [u8; 32] = seed[32..64].try_into()
             .map_err(|_| anyhow!("Failed to convert slice to array"))?;
-        let private_key = SecretKey::from_byte_array(seed_array)?;
-        let public_key = PublicKey::from_secret_key(&secp, &private_key);
+        
+        let (public_key, encrypted_private_key) = {
+            let private_key = SecretKey::from_byte_array(seed_array)?;
+            let public_key = PublicKey::from_secret_key(&secp, &private_key);
+                
+            let private_key_bytes = private_key.secret_bytes();
+            let encrypted_private_key = aes256_encrypt_private_key(&private_key_bytes, encryption_key);
+             
+            let mut sensetive_date = private_key_bytes;
+            zeroize::Zeroize::zeroize(&mut sensetive_date);
+                
+            (public_key,  encrypted_private_key)
+        };
+
         let address = Self::generate_bitcoin_address(&public_key);
         let type_blockchain = String::from("bitcoin");
-        let encrypted_private_key = aes256_encrypt_private_key(&private_key.secret_bytes(), &encryption_key);
-
 
         Ok(Wallet::new(
             encrypted_private_key.to_vec(),
