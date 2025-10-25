@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::{Parser};
+use ed25519_dalek::ed25519::signature;
 use std::path::PathBuf;
 
 use mantishash::{KeyMaterial, Wallet, WalletBuilder, aes256_decrypt_private_key};
@@ -48,29 +49,38 @@ fn main() -> Result<()> {
     let args = Args::parse();
     let key_material = KeyMaterial::derive_key_material(&args.image1, &args.image2, &args.color)?;
 
-    let wallets: Vec<Wallet> = ["solana", "ethereum", "bitcoin"]
-        .iter()
-        .map(|&chain| WalletBuilder::generate(&key_material.master_seed, &key_material.cipher_key, chain))
-        .collect::<Result<_>>()?;
-    // }
-    for (i, wallet) in wallets.iter().enumerate() {
-        
-        match aes256_decrypt_private_key(&wallet.get_bytes_encrypted_sec(), &key_material.cipher_key) {
-            Ok(decrypted_bytes) => {
-                let decrypted_private_key = hex::encode(&decrypted_bytes);
-                
-                println!("Blockchain {} :\n", wallet.get_type_blockchain());
 
-                println!("Encrypted Secret Key: {:?} ##", wallet.get_hex_encrypted_sec());
-                println!("Decrypted Secret Key: {:?} ##\n", decrypted_private_key);
-                
-                println!("Public Key: {} ##", wallet.get_hex_pub());
-                println!("Address: {} ##\n", wallet.get_address());
-            }
-            Err(e) => {
-                eprintln!("Decryption failed: {}", e);
-            }
-        }
-    }
+    let wallet = WalletBuilder::generate_wallet(&key_material.master_seed, &key_material.cipher_key, &args.blockchain)?;
+    let transaction_data = "Sample transaction data";
+    let decryption_key = &key_material.cipher_key;
+    let signature = wallet.sign_transaction(decryption_key,transaction_data.as_bytes())?;
+
+    let is_valid = wallet.verify_signature(transaction_data.as_bytes(), &signature)?;
+    println!("Is the signature valid? {}", is_valid);
     Ok(())
+    // let wallets: Vec<Wallet> = ["solana", "ethereum", "bitcoin"]
+    //     .iter()
+    //     .map(|&chain| WalletBuilder::generate_wallet(&key_material.master_seed, &key_material.cipher_key, chain))
+    //     .collect::<Result<_>>()?;
+    // // }
+    // for (i, wallet) in wallets.iter().enumerate() {
+        
+    //     match aes256_decrypt_private_key(&wallet.get_bytes_encrypted_sec(), &key_material.cipher_key) {
+    //         Ok(decrypted_bytes) => {
+    //             let decrypted_private_key = hex::encode(&decrypted_bytes);
+                
+    //             println!("Blockchain {} :\n", wallet.get_type_blockchain());
+
+    //             println!("Encrypted Secret Key: {:?} ##", wallet.get_hex_encrypted_sec());
+    //             println!("Decrypted Secret Key: {:?} ##\n", decrypted_private_key);
+                
+    //             println!("Public Key: {} ##", wallet.get_hex_pub());
+    //             println!("Address: {} ##\n", wallet.get_address());
+    //         }
+    //         Err(e) => {
+    //             eprintln!("Decryption failed: {}", e);
+    //         }
+    //     }
+    // }
+    // Ok(())
 }

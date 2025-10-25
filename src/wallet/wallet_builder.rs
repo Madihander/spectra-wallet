@@ -31,7 +31,7 @@ impl WalletBuilder {
             let public_key = VerifyingKey::from(&private_key);
             
             let private_key_bytes = private_key.to_bytes();
-            let encrypted_private_key = aes256_encrypt_private_key(&private_key_bytes, encryption_key);
+            let encrypted_private_key = aes256_encrypt_private_key(&private_key_bytes, encryption_key)?;
             // 
             let mut sensetive_date = private_key_bytes;
             zeroize::Zeroize::zeroize(&mut sensetive_date);
@@ -60,7 +60,7 @@ impl WalletBuilder {
             let public_key = PublicKey::from_secret_key(&secp, &private_key);
             
             let private_key_bytes = private_key.secret_bytes();
-            let encrypted_private_key = aes256_encrypt_private_key(&private_key_bytes, encryption_key);
+            let encrypted_private_key = aes256_encrypt_private_key(&private_key_bytes, encryption_key)?;
             // 
             let mut sensetive_date = private_key_bytes;
             zeroize::Zeroize::zeroize(&mut sensetive_date);
@@ -89,7 +89,7 @@ impl WalletBuilder {
             let public_key = PublicKey::from_secret_key(&secp, &private_key);
                 
             let private_key_bytes = private_key.secret_bytes();
-            let encrypted_private_key = aes256_encrypt_private_key(&private_key_bytes, encryption_key);
+            let encrypted_private_key = aes256_encrypt_private_key(&private_key_bytes, encryption_key)?;
              
             let mut sensetive_date = private_key_bytes;
             zeroize::Zeroize::zeroize(&mut sensetive_date);

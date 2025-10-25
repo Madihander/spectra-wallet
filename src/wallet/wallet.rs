@@ -1,3 +1,8 @@
+
+use super::signer::TransactionSigner;
+use crate::crypto::aes_encryptor;
+use anyhow::{anyhow, Result};
+
 #[derive(Debug)]
 pub struct Wallet {
     pub encrypted_private_key: Vec<u8>,
@@ -33,6 +38,34 @@ impl Wallet {
 
     pub fn get_type_blockchain(&self) -> &str {
         &self.type_blockchain
+    }
+
+    pub fn sign_transaction(
+        &self,
+        decryption_key: &[u8; 64],
+        transaction_data: &[u8],
+    ) -> Result<Vec<u8>> {
+        // Decrypt the private key and handle the Result
+        let private_key = aes_encryptor::aes256_decrypt_private_key(
+            &self.encrypted_private_key,
+            decryption_key,
+        )?;
+        
+        match self.type_blockchain.as_str() {
+            "solana" => TransactionSigner::sign_solana_transaction(&private_key, transaction_data),
+            _ => Err(anyhow!("Unsupported blockchain for signing {}", self.type_blockchain)),
+        }
+    }
+
+    pub fn verify_signature(
+        &self,
+        message: &[u8],
+        signature: &[u8],
+    ) -> Result<bool> {
+        match self.type_blockchain.as_str() {
+            "solana" => TransactionSigner::verify_solana_signature(&self.public_key, message, signature),
+            _ => Err(anyhow!("Unsupported blockchain for verification {}", self.type_blockchain)),
+        }
     }
 }
 
