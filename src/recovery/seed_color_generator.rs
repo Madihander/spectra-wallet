@@ -1,11 +1,11 @@
 // seed_color_generator.rs
 //
-// Преобразования:
+// Transformations:
 //  - master_seed (bytes) -> Vec<"#RRGGBB"> (num_colors) + appended salt_color
-//  - Vec<"#RRGGBB"> (first N) -> master_seed (bytes)  (и извлекает salt_color как последний элемент)
+//  - Vec<"#RRGGBB"> (first N) -> master_seed (bytes)  (and extracts salt_color as the last element.)
 //
-// Важно: для обратимости длина master_seed MUST == num_colors * 3.
-// Если это не так — функция вернёт ошибку. Это даёт простую, однозначную и безопасную схему.
+// Important: for reversibility, the length of the master_seed MUST == num_colors * 3.
+// If this is not the case, the function returns an error. This provides a simple, unambiguous and secure scheme.
 
 use std::fmt;
 
@@ -42,10 +42,10 @@ impl fmt::Display for SeedColorError {
 
 impl std::error::Error for SeedColorError {}
 
-/// Преобразует master_seed -> цвета.
+/// Converts master_seed -> цвета.
 /// - `master_seed` length must equal `num_colors * 3`.
-/// - `salt_color` должен быть в формате "#RRGGBB" (будет добавлен в конец результата).
-/// Возвращает вектор строк вида "#RRGGBB" длиной num_colors+1 (последний элемент = salt_color).
+/// - `salt_color` should be in the format "#RRGGBB" (will be added to the end of the result).
+/// Returns a vector of strings of the form "#RRGGBB" with a length of num_colors+1 (last element = salt_color).
 pub fn master_seed_to_colors(
     master_seed: &[u8],
     num_colors: usize,
@@ -59,7 +59,7 @@ pub fn master_seed_to_colors(
         });
     }
 
-    // Проверка salt_color формата
+    // Checking the salt_color format
     if !is_valid_hex_color(salt_color) {
         return Err(SeedColorError::InvalidColorFormat(salt_color.to_string()));
     }
@@ -70,20 +70,20 @@ pub fn master_seed_to_colors(
         let r = master_seed[off];
         let g = master_seed[off + 1];
         let b = master_seed[off + 2];
-        // форматируем в "#RRGGBB"
+        // formatting in "#RRGGBB"
         colors.push(format!("#{:02x}{:02x}{:02x}", r, g, b));
     }
 
-    // Добавляем salt_color как последний элемент (например, 17-й)
+    // We add salt_color as the last element (for example, the 17th)
     colors.push(salt_color.to_lowercase());
 
     Ok(colors)
 }
 
-/// Восстанавливает master_seed и salt_color из последовательности цветов.
-/// - Последний элемент считается salt_color.
-/// - Возвращает (master_seed_bytes, salt_color_string).
-/// - Количество цветов должно быть >= 2 (как минимум 1 цвет + 1 salt_color).
+/// Restores the master_seed and salt_color from the color sequence.
+/// - The last element is considered salt_color.
+/// - Returns (master_seed_bytes, salt_color_string).
+/// - The number of colors must be >= 2 (at least 1 color + 1 salt_color).
 pub fn colors_to_master_seed(
     colors: &[String],
 ) -> Result<(Vec<u8>, String), SeedColorError> {
@@ -94,14 +94,14 @@ pub fn colors_to_master_seed(
         });
     }
 
-    // Последний — salt
+    // The last one is salt
     let salt_color = colors.last().unwrap().to_lowercase();
 
     if !is_valid_hex_color(&salt_color) {
         return Err(SeedColorError::InvalidColorFormat(salt_color));
     }
 
-    // Остальные — байты seed
+    // The rest are seed bytes
     let num_seed_colors = colors.len() - 1;
     let mut seed_bytes: Vec<u8> = Vec::with_capacity(num_seed_colors * 3);
 
@@ -125,7 +125,7 @@ pub fn colors_to_master_seed(
     Ok((seed_bytes, salt_color))
 }
 
-/// Utility: проверяем, соответствует ли строка формату "#RRGGBB" (6 hex символов)
+/// Utility: checking whether the string matches the format "#RRGGBB" (6 hex characters)
 fn is_valid_hex_color(s: &str) -> bool {
     if s.len() != 7 { return false; }
     let bytes = s.as_bytes();
@@ -139,7 +139,7 @@ mod tests {
 
     #[test]
     fn roundtrip_basic() {
-        // Создаём seed длины 3 * 4 = 12 байт => 4 цвета
+        // Creating a seed of length 3 * 4 = 12 bytes => 4 colors
         let seed: Vec<u8> = vec![
             0x12, 0x34, 0x56, // color1
             0xab, 0xcd, 0xef, // color2

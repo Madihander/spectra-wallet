@@ -9,6 +9,8 @@ use crate::crypto::{blake2b_hash, salt_from_color};
 use super::utils;
 use crate::recovery::{master_seed_to_colors, colors_to_master_seed};
 
+use zeroize::Zeroize;
+
 #[derive(Debug, Clone)]
 pub struct KeyMaterial {
     pub master_seed: [u8; 48],        // master seed (deterministic)
@@ -122,4 +124,12 @@ impl KeyMaterial {
     pub fn get_seed_colors(&self) -> &Vec<String> {
         &self.seed_colors
     }
+
+    pub fn clear_seed_colors(&mut self) {
+        for color in &mut self.seed_colors {
+            color.zeroize(); // безопасно стирает содержимое строки
+        }
+        self.seed_colors.clear();
+    }
+
 }
