@@ -13,7 +13,7 @@ use super::Wallet;
 pub struct WalletBuilder;
 
 impl WalletBuilder {
-    pub fn generate_wallet(master_seed: &[u8; 64], encryption_key: &[u8; 64], blockchain: &str) -> Result<Wallet> {
+    pub fn generate_wallet(master_seed: &[u8; 48], encryption_key: &[u8; 64], blockchain: &str) -> Result<Wallet> {
         match blockchain.to_lowercase().as_str() {
             "solana" => Self::generate_solana(master_seed, encryption_key),
             "ethereum" => Self::generate_ethereum(master_seed, encryption_key),
@@ -22,7 +22,7 @@ impl WalletBuilder {
         }
     }
 
-    fn generate_solana(seed: &[u8; 64], encryption_key: &[u8; 64]) -> Result<Wallet> {
+    fn generate_solana(seed: &[u8; 48], encryption_key: &[u8; 64]) -> Result<Wallet> {
         let seed_array: [u8; 32] = seed[0..32].try_into()
             .map_err(|_| anyhow::anyhow!("Failed to convert slice to array"))?;
     
@@ -50,7 +50,7 @@ impl WalletBuilder {
         ))
     }
 
-    fn generate_ethereum(seed: &[u8; 64], encryption_key: &[u8; 64]) -> Result<Wallet> {
+    fn generate_ethereum(seed: &[u8; 48], encryption_key: &[u8; 64]) -> Result<Wallet> {
         let secp = Secp256k1::new();
         let seed_array: [u8; 32] = seed[0..32].try_into()
             .map_err(|_| anyhow!("Failed to convert slice to array"))?;
@@ -79,7 +79,7 @@ impl WalletBuilder {
         ))
     }
 
-    fn generate_bitcoin(seed: &[u8; 64], encryption_key: &[u8; 64]) -> Result<Wallet> {
+    fn generate_bitcoin(seed: &[u8; 48], encryption_key: &[u8; 64]) -> Result<Wallet> {
         let secp = Secp256k1::new();
         let seed_array: [u8; 32] = seed[32..64].try_into()
             .map_err(|_| anyhow!("Failed to convert slice to array"))?;
