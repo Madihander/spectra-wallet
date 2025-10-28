@@ -126,7 +126,7 @@ pub fn colors_to_master_seed(
 }
 
 /// Utility: checking whether the string matches the format "#RRGGBB" (6 hex characters)
-fn is_valid_hex_color(s: &str) -> bool {
+pub fn is_valid_hex_color(s: &str) -> bool {
     if s.len() != 7 { return false; }
     let bytes = s.as_bytes();
     if bytes[0] != b'#' { return false; }

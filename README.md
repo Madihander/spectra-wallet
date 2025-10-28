@@ -1,6 +1,15 @@
 # MantisHash
-A Rust CLI application that generates a cryptographic key pair and wallet address using an image as an entropy source.
-The user provides the path to the image - the program extracts the color palette, converts it into a deterministic hash, and generates a private key, public key, and address via KDF.
+A hybrid Rust + Python + React wallet generator based on visual entropy.
 
 ### How to run
-Example: cargo run -- --first ./img.png --second ./img.png --color '#ff5733' 
+## 🦀 Rust Core
+To build Rust library:
+```bash
+cargo build --release
+
+## 🐍 Python
+Create and activate a virtual environment:
+python3 -m venv .venv
+source .venv/bin/activate
+pip install maturin
+maturin develop

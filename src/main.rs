@@ -36,8 +36,8 @@ fn main() -> Result<()> {
     let args = Args::parse();
     
     let image_path = "img.png";
-    let image2 = fs::read("img2.jpg").expect("Failed to read the image file");
-   
+    let image2 = fs::read("img2.png").expect("Failed to read the image file");
+    // println!("image2: {:#?}", image2);
     // Read the image file into a Vec<u8>
     let image_data = fs::read(image_path).expect("Failed to read the image file");
     let emoji:&str = "👻";
@@ -49,7 +49,7 @@ fn main() -> Result<()> {
     println!("Cipher Key: {:?}\n", hex::encode(key_material.cipher_key.unwrap()));
 
 
-    let blockchain = "solana";
+    let blockchain: &'static str = "solana";
 
     let wallet = WalletBuilder::generate_wallet(&key_material.master_seed, &key_material.cipher_key.unwrap(), blockchain)?;
 

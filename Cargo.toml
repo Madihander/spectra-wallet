@@ -3,26 +3,30 @@ name = "mantishash"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+name = "mantishash"
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = []
+python = ["pyo3"]
+
 [dependencies]
+
 anyhow = "1.0"
 clap = { version = "4", features = ["derive"] }
-
 zeroize = "1.8"
-
 image = "0.25"
 blake2 = "0.10"
 argon2 = "0.5.3"
-
 aes-gcm = "0.10"
 ed25519-dalek = "2.0"
 secp256k1 = "0.31"
-
 tiny-keccak = { version = "2.0.0", features = ["keccak"] }
-
 hex = "0.4"
 rand = "0.8"
-
 base58= "0.2"
 sha2 = "0.10"
 ripemd = "0.1"
 serde = "1.0.228"
+pyo3 = { version = "0.21", optional = true }
