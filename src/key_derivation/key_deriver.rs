@@ -83,7 +83,7 @@ impl KeyMaterial {
         Ok(())
     }
 
-    fn derive_master_seed(
+    pub fn derive_master_seed(
         primary_entropy: &[u8],
         emoji_bytes: &[u8],
         color_salt: &[u8],
@@ -97,12 +97,13 @@ impl KeyMaterial {
         master_seed
     }
 
-    fn derive_cipher_key(
+    pub fn derive_cipher_key(
         pixels: &[u8],
         emoji_bytes: &[u8],
         color_bytes: &[u8],
     ) -> [u8; 64] {
-        blake2b_hash(&[pixels, emoji_bytes, color_bytes].concat())
+        let cipher_key = blake2b_hash(&[pixels, emoji_bytes, color_bytes].concat());
+        cipher_key
     }
 
     pub fn get_master_seed(&self) -> &[u8; 48] {

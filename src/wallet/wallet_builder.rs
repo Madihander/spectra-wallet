@@ -1,4 +1,5 @@
 
+use aes_gcm::aes::cipher;
 use anyhow::{anyhow, Result};
 use ed25519_dalek::{SigningKey, VerifyingKey};
 use secp256k1::{Secp256k1, SecretKey, PublicKey};
@@ -8,31 +9,68 @@ use ripemd::{Ripemd160};
 use tiny_keccak::{Keccak, Hasher};
 
 use crate::crypto::aes_encryptor::aes256_encrypt_private_key;
-
+use crate::key_derivation::key_deriver::KeyMaterial;
 use super::Wallet;
-pub struct WalletBuilder;
 
+use crate::key_derivation::image_loader::process_image;
+pub struct WalletBuilder;
 impl WalletBuilder {
-    pub fn generate_wallet(master_seed: &[u8; 48], encryption_key: &[u8; 64], blockchain: &str) -> Result<Wallet> {
+    pub fn generate_wallet(image_data:Vec<u8> , emoji: &str, color: &str, blockchain:&str) -> Result<Wallet> {
+        
+        let wallet_data = KeyMaterial::generate(&image_data, &emoji, &color)?;
+        let new_image_data = process_image(&image_data)?;
         match blockchain.to_lowercase().as_str() {
-            "solana" => Self::generate_solana(master_seed, encryption_key),
-            "ethereum" => Self::generate_ethereum(master_seed, encryption_key),
-            "bitcoin" => Self::generate_bitcoin(master_seed, encryption_key),
+            "solana" => Self::generate_solana(
+                &wallet_data.master_seed,
+                &wallet_data.cipher_key.unwrap(),
+                wallet_data.seed_colors,
+                new_image_data, emoji, color
+            ),
+
+            "ethereum" => Self::generate_ethereum(
+                &wallet_data.master_seed, 
+                &wallet_data.cipher_key.unwrap(),
+                wallet_data.seed_colors,
+                new_image_data, emoji, color),
+            
+            "bitcoin" => Self::generate_bitcoin(
+                &wallet_data.master_seed,
+                &wallet_data.cipher_key.unwrap(),
+                wallet_data.seed_colors,
+                new_image_data, emoji, color),
+            
             _ => Err(anyhow!("Unsupported blockchain: {}", blockchain))
         }
     }
 
-    fn generate_solana(seed: &[u8; 48], encryption_key: &[u8; 64]) -> Result<Wallet> {
+    pub fn recover_wallet(colors: &[String],primary_image: &[u8],
+        emoji: &str, ) -> Result<Wallet>{
+        let mut wallet_data = KeyMaterial::recover_from_colors(colors)?;
+        let new_image = process_image(primary_image)?;
+        wallet_data.regenerate_cipher_key(primary_image, emoji)?;
+        Self::generate_solana(
+            &wallet_data.master_seed,
+            &wallet_data.cipher_key.unwrap(),
+            wallet_data.seed_colors,
+            new_image, emoji, &colors[16]
+        )
+
+    }
+
+    fn generate_solana(
+        seed: &[u8; 48], 
+        encryption_key: &[u8; 64],
+        seed_color: Vec<String>,
+        image: Vec<u8>, emoji: &str, color:&str) -> Result<Wallet> {
+            
         let seed_array: [u8; 32] = seed[0..32].try_into()
             .map_err(|_| anyhow::anyhow!("Failed to convert slice to array"))?;
     
         let (public_key, encrypted_private_key) = {
             let private_key = SigningKey::from_bytes(&seed_array);
             let public_key = VerifyingKey::from(&private_key);
-            
-            let private_key_bytes = private_key.to_bytes();
+            let private_key_bytes = private_key.to_bytes();            
             let encrypted_private_key = aes256_encrypt_private_key(&private_key_bytes, encryption_key)?;
-            // 
             let mut sensetive_date = private_key_bytes;
             zeroize::Zeroize::zeroize(&mut sensetive_date);
             
@@ -41,16 +79,20 @@ impl WalletBuilder {
 
         let address = Self::generate_solana_address(&public_key);
         let type_blockchain = String::from("solana");
-
         Ok(Wallet::new( 
             encrypted_private_key.to_vec(),
             public_key.to_bytes().to_vec(),
             address,
-            type_blockchain
+            seed_color,
+            type_blockchain,
+            image,
+            String::from(emoji),
+            String::from(color)
         ))
     }
 
-    fn generate_ethereum(seed: &[u8; 48], encryption_key: &[u8; 64]) -> Result<Wallet> {
+    fn generate_ethereum(seed: &[u8; 48], encryption_key: &[u8; 64],seed_color: Vec<String>,
+        image: Vec<u8>, emoji: &str, color:&str) -> Result<Wallet> {
         let secp = Secp256k1::new();
         let seed_array: [u8; 32] = seed[0..32].try_into()
             .map_err(|_| anyhow!("Failed to convert slice to array"))?;
@@ -75,11 +117,16 @@ impl WalletBuilder {
             encrypted_private_key.to_vec(),
             public_key.serialize_uncompressed().to_vec(),
             address,
-            type_blockchain
+            seed_color,
+            type_blockchain,
+            image,
+            String::from(emoji),
+            String::from(color)
         ))
     }
 
-    fn generate_bitcoin(seed: &[u8; 48], encryption_key: &[u8; 64]) -> Result<Wallet> {
+    fn generate_bitcoin(seed: &[u8; 48], encryption_key: &[u8; 64], seed_color: Vec<String>,
+        image: Vec<u8>, emoji: &str, color:&str) -> Result<Wallet> {
         let secp = Secp256k1::new();
         let seed_array: [u8; 32] = seed[32..64].try_into()
             .map_err(|_| anyhow!("Failed to convert slice to array"))?;
@@ -104,7 +151,11 @@ impl WalletBuilder {
             encrypted_private_key.to_vec(),
             public_key.serialize_uncompressed().to_vec(),
             address,
-            type_blockchain
+            seed_color,
+            type_blockchain,
+            image,
+            String::from(emoji),
+            String::from(color)
         ))
     }
 

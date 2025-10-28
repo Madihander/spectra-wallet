@@ -10,7 +10,7 @@ pub fn aes256_encrypt_private_key(private_key: &[u8], encryption_key: &[u8; 64])
     let key = Key::<Aes256Gcm>::from_slice(&encryption_key[..32]);
     let cipher = Aes256Gcm::new(key);
     let nonce = Aes256Gcm::generate_nonce(&mut OsRng);
-    
+
     let ciphertext = cipher.encrypt(&nonce, private_key)
         .expect("encryption failure");
     
