@@ -1,9 +1,7 @@
-FROM rust:1.82-slim
+FROM rustlang/rust:nightly-slim
 
 WORKDIR /app
 
 COPY . .
-
-RUN cargo build --release
 
 CMD ["./target/release/wallet_cli"]
