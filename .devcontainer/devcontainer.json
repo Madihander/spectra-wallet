@@ -1,0 +1,14 @@
+{
+  "name": "Spectra Wallet",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "settings": {
+    "rust-analyzer.cargo.runBuildScripts": true
+  },
+  "extensions": [
+    "rust-lang.rust-analyzer"
+  ],
+  "postCreateCommand": "cargo build",
+  "remoteUser": "vscode"
+}
