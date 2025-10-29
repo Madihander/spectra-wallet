@@ -1,4 +1,4 @@
-use mantishash::{Wallet, WalletBuilder, print_banner};
+use spectra_wallet::{Wallet, WalletBuilder, print_banner};
 
 use anyhow::Result;
 use colored::*;

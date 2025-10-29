@@ -1,10 +1,10 @@
 [package]
-name = "mantishash"
+name = "spectra_wallet"
 version = "0.1.0"
 edition = "2024"
 
 [lib]
-name = "mantishash"
+name = "spectra_wallet"
 crate-type = ["cdylib", "rlib"]
 
 # [features]
