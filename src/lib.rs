@@ -10,7 +10,8 @@ pub use crypto::{
 
 pub use key_derivation::{
     from_raw_pixels, entropy_by_frequency, load_image, process_image, 
-    random_bytes, print_type, hex_color_to_bytes, EMOJI_LIST,KeyMaterial
+    random_bytes, print_type, hex_color_to_bytes, EMOJI_LIST,KeyMaterial,
+    print_banner
 };
 
 pub use recovery::{

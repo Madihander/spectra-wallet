@@ -21,12 +21,12 @@ pub struct KeyMaterial {
 impl KeyMaterial {
     /// Creating new KeyMaterial from images, emojis, and colors
     pub fn generate(
-        primary_image: &[u8],
+        primary_image: &PathBuf,
         emoji: &str,
         color: &str,
     ) -> Result<Self> {
         // 1. Extracting the data
-        let pixels = image_loader::process_image(primary_image)?;
+        let pixels = image_loader::load_image(primary_image)?;
         let emoji_bytes = emoji.as_bytes();
         let color_bytes = utils::hex_color_to_bytes(color);
         
@@ -69,10 +69,10 @@ impl KeyMaterial {
     /// by adding a new image and emoji
     pub fn regenerate_cipher_key(
         &mut self,
-        primary_image: &[u8],
+        primary_image: &PathBuf,
         emoji: &str,
     ) -> Result<()> {
-        let pixels = image_loader::process_image(primary_image)?;
+        let pixels = image_loader::load_image(primary_image)?;
         let emoji_bytes = emoji.as_bytes();
 
         // The last color from seed_colors is our "color"

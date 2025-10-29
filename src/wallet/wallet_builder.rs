@@ -1,7 +1,10 @@
 
+use std::path::PathBuf;
+
 use aes_gcm::aes::cipher;
 use anyhow::{anyhow, Result};
 use ed25519_dalek::{SigningKey, VerifyingKey};
+use image::load;
 use secp256k1::{Secp256k1, SecretKey, PublicKey};
 use base58::{ToBase58};
 use sha2::{Sha256, Digest};
@@ -12,13 +15,13 @@ use crate::crypto::aes_encryptor::aes256_encrypt_private_key;
 use crate::key_derivation::key_deriver::KeyMaterial;
 use super::Wallet;
 
-use crate::key_derivation::image_loader::process_image;
+use crate::key_derivation::image_loader::load_image;
 pub struct WalletBuilder;
 impl WalletBuilder {
-    pub fn generate_wallet(image_data:Vec<u8> , emoji: &str, color: &str, blockchain:&str) -> Result<Wallet> {
+    pub fn generate_wallet(image_data:&PathBuf , emoji: &str, color: &str, blockchain:&str) -> Result<Wallet> {
         
         let wallet_data = KeyMaterial::generate(&image_data, &emoji, &color)?;
-        let new_image_data = process_image(&image_data)?;
+        let new_image_data = load_image(&image_data)?;
         match blockchain.to_lowercase().as_str() {
             "solana" => Self::generate_solana(
                 &wallet_data.master_seed,
@@ -43,10 +46,10 @@ impl WalletBuilder {
         }
     }
 
-    pub fn recover_wallet(colors: &[String],primary_image: &[u8],
+    pub fn recover_wallet(colors: &[String],primary_image: &PathBuf,
         emoji: &str, ) -> Result<Wallet>{
         let mut wallet_data = KeyMaterial::recover_from_colors(colors)?;
-        let new_image = process_image(primary_image)?;
+        let new_image = load_image(primary_image)?;
         wallet_data.regenerate_cipher_key(primary_image, emoji)?;
         Self::generate_solana(
             &wallet_data.master_seed,
