@@ -1,14 +1,16 @@
 {
-  "name": "Spectra Wallet",
+  "name": "Rust Wallet CLI",
   "build": {
     "dockerfile": "Dockerfile"
   },
   "settings": {
-    "rust-analyzer.cargo.runBuildScripts": true
+    "rust-analyzer.cargo.runBuildScripts": true,
+    "terminal.integrated.defaultProfile.linux": "bash"
   },
   "extensions": [
     "rust-lang.rust-analyzer"
   ],
+  "forwardPorts": [],
   "postCreateCommand": "cargo build",
-  "remoteUser": "vscode"
+  "remoteUser": "root"
 }
