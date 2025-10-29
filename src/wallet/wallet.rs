@@ -2,8 +2,11 @@ use std::fs;
 use serde::{Deserialize, Serialize};
 use base64::{Engine as _, engine::general_purpose};
 
-use super::signer::TransactionSigner;
-use crate::{KeyMaterial, crypto::aes_encryptor, hex_color_to_bytes, salt_from_color};
+
+// use super::signer::TransactionSigner;
+use crate::{KeyMaterial, crypto::aes_encryptor, hex_color_to_bytes};
+use crate::{TransactionSigner};
+
 use anyhow::{anyhow, Result};
 
 #[derive(Debug, Serialize, Deserialize)]

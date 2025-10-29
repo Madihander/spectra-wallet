@@ -20,6 +20,3 @@ pub use recovery::{
 };
 
 pub use wallet::{Wallet, WalletBuilder, TransactionSigner};
-
-#[cfg(feature = "python")]
-pub mod python_bindings;

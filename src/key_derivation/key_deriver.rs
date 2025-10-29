@@ -1,8 +1,8 @@
 use anyhow::Result;
 use std::path::PathBuf;
-use serde::{Serialize, Deserialize};
 
 use argon2::{Argon2};
+
 use super::image_loader;
 use super::entropy;
 use crate::crypto::{blake2b_hash, salt_from_color};

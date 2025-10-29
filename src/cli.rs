@@ -62,51 +62,73 @@ pub fn run_cli() -> Result<()> {
     Ok(())
 }
 
-fn create_wallet(wallet_path: &PathBuf) -> Result<()> {
+fn create_wallet(wallet_path: &PathBuf) -> anyhow::Result<()> {
+    use dialoguer::{Input, theme::ColorfulTheme};
+    use colored::*;
     let theme = ColorfulTheme::default();
 
-    let image_path: String = Input::with_theme(&theme)
-        .with_prompt("Enter path to your image")
-        .interact_text()?;
+    let image_path = loop {
+        let input: String = Input::with_theme(&theme)
+            .with_prompt("Enter path to your image")
+            .interact_text()?;
 
-    let emoji: String = Input::with_theme(&theme)
-        .with_prompt("Enter emoji (example: 🚀, 🧠, 🦋)")
-        .interact_text()?;
-
-    let color: String = Input::with_theme(&theme)
-        .with_prompt("Enter color in HEX (example: #ff00ff)")
-        .interact_text()?;
-
-    let blockchain: String = Input::with_theme(&theme)
-        .with_prompt("Blockchain (default: solana)")
-        .allow_empty(true)
-        .interact_text()?;
-
-    let blockchain = if blockchain.trim().is_empty() {
-        "solana".to_string()
-    } else {
-        blockchain.trim().to_string()
+        let path = PathBuf::from(input.trim());
+        if path.exists() && path.is_file() {
+            break path;
+        } else {
+            println!("{}", "❌ File does not exist, try again.".red());
+        }
     };
 
-    let wallet = WalletBuilder::generate_wallet(
-        &PathBuf::from(image_path.trim()),
-        &emoji.trim(),
-        &color.trim(),
-        &blockchain,
-    )?;
+    let emoji = loop {
+        let input: String = Input::with_theme(&theme)
+            .with_prompt("Enter emoji (example: 🚀, 🧠, 🦋)")
+            .interact_text()?;
+        let input = input.trim();
+        if !input.is_empty() {
+            break input.to_string();
+        } else {
+            println!("{}", "❌ Emoji cannot be empty.".red());
+        }
+    };
+
+    let color = loop {
+        let input: String = Input::with_theme(&theme)
+            .with_prompt("Enter color in HEX (example: #ff00ff)")
+            .interact_text()?;
+        let input = input.trim();
+        if input.starts_with('#') && input.len() == 7 && u32::from_str_radix(&input[1..], 16).is_ok() {
+            break input.to_string();
+        } else {
+            println!("{}", "❌ Invalid HEX color, try again.".red());
+        }
+    };
+
+    let blockchain = loop {
+        let input: String = Input::with_theme(&theme)
+            .with_prompt("Blockchain (default: solana)")
+            .allow_empty(true)
+            .interact_text()?;
+        let input = input.trim();
+        
+        // Если пусто или solana — используем solana
+        if input.is_empty() || input.eq_ignore_ascii_case("solana") {
+            break "solana".to_string();
+        } else {
+            println!("{}", "⚠️ Currently only Solana is supported. It's recommended to use Solana.".yellow());
+            break "solana".to_string();
+        }
+    };
+
+    let wallet = WalletBuilder::generate_wallet(&image_path, &emoji, &color, &blockchain)?;
 
     wallet.save(wallet_path.to_str().unwrap())?;
-
     println!(
         "\n{}",
         "✅ Wallet successfully created and saved to wallet.json!".green()
     );
+
     display_seed_colors(wallet.get_seed_colors());
-    // println!(
-    //     "{} {:?}\n",
-    //     "🌈 Your seed colors:".bright_magenta(),
-    //     wallet.get_seed_colors()
-    // );
 
     Ok(())
 }
@@ -118,6 +140,8 @@ fn recover_existing_wallet(wallet_path: &PathBuf) -> Result<()> {
     println!("{}", "🧩 Starting wallet recovery...".cyan());
     println!("{}", "[[Let's omit the moment with the input of seed colors.]]");
     // читаем текущий wallet.json
+
+    let theme = ColorfulTheme::default();
     let data = fs::read_to_string(&wallet_path)?;
     let json: Value = serde_json::from_str(&data)?;
 
@@ -135,19 +159,35 @@ fn recover_existing_wallet(wallet_path: &PathBuf) -> Result<()> {
     }
 
     // ввод пути к новой картинке
-    let primary_image: String = Input::with_theme(&ColorfulTheme::default())
-        .with_prompt("📁 Enter path to your image")
-        .interact_text()?;
-    let primary_image = PathBuf::from(primary_image);
+    let image_path = loop {
+        let input: String = Input::with_theme(&theme)
+            .with_prompt("Enter path to your image")
+            .interact_text()?;
+
+        let path = PathBuf::from(input.trim());
+        if path.exists() && path.is_file() {
+            break path;
+        } else {
+            println!("{}", "❌ File does not exist, try again.".red());
+        }
+    };
 
     // ввод emoji
-    let emoji: String = Input::with_theme(&ColorfulTheme::default())
-        .with_prompt("😀 Enter your emoji key")
-        .interact_text()?;
+    let emoji = loop {
+        let input: String = Input::with_theme(&theme)
+            .with_prompt("Enter emoji (example: 🚀, 🧠, 🦋)")
+            .interact_text()?;
+        let input = input.trim();
+        if !input.is_empty() {
+            break input.to_string();
+        } else {
+            println!("{}", "❌ Emoji cannot be empty.".red());
+        }
+    };
 
     // восстанавливаем кошелёк
     let recovered_wallet =
-        WalletBuilder::recover_wallet(&seed_colors, &primary_image, &emoji)?;
+        WalletBuilder::recover_wallet(&seed_colors, &image_path, &emoji)?;
 
     // удаляем старый wallet.json
     fs::remove_file(&wallet_path)?;

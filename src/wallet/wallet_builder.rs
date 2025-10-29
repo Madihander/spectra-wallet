@@ -1,10 +1,8 @@
 
 use std::path::PathBuf;
 
-use aes_gcm::aes::cipher;
 use anyhow::{anyhow, Result};
 use ed25519_dalek::{SigningKey, VerifyingKey};
-use image::load;
 use secp256k1::{Secp256k1, SecretKey, PublicKey};
 use base58::{ToBase58};
 use sha2::{Sha256, Digest};
@@ -131,7 +129,7 @@ impl WalletBuilder {
     fn generate_bitcoin(seed: &[u8; 48], encryption_key: &[u8; 64], seed_color: Vec<String>,
         image: Vec<u8>, emoji: &str, color:&str) -> Result<Wallet> {
         let secp = Secp256k1::new();
-        let seed_array: [u8; 32] = seed[32..64].try_into()
+        let seed_array: [u8; 32] = seed[0..32].try_into()
             .map_err(|_| anyhow!("Failed to convert slice to array"))?;
         
         let (public_key, encrypted_private_key) = {
