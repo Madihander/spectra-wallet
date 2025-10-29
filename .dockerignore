@@ -1,0 +1,26 @@
+target/
+**/target/
+
+*.log
+*.tmp
+*.lock
+
+.git/
+.gitignore
+.vscode/
+.idea/
+
+# Виртуальные окружения
+.venv/
+__pycache__/
+*.pyc
+
+# Docker и Codespaces
+.devcontainer/
+.codespaces/
+
+*.exe
+*.out
+*.bin
+
+wallet.json
