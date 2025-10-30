@@ -12,7 +12,11 @@ Madi Kazhibekov:
 - Telegram: @madihander
 
 # Resources
+Pitch deck video: https://www.loom.com/share/57233a68ea054f8c96cb4509dbb42b7d
 
+Technical demo video: https://youtu.be/Su2EqSvBA7I
+
+Link on presentation: https://www.canva.com/design/DAG3Peb36GU/hu48XWzzyAKYW__2XRg0zA/edit?utm_content=DAG3Peb36GU&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
   
 # Problem and Solution
 ### The Problem With Traditional Wallets
