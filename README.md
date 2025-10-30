@@ -1,6 +1,7 @@
 # Spectra Wallet
 
 **A visual wallet for Web3, where your seed phrase is art.**
+
 Spectra Wallet is an innovative approach to security and user experience in Web3. We are removing barriers in the form of long seed phrases and complex passwords, replacing them with something that the human brain remembers better and faster — visual images.
 
 # Submission to 2025 Solana Colosseum Submission by:
@@ -48,6 +49,7 @@ After recovery:
 Offline CLI tool
 # Tech Stack
 Core Language: Rust
+
 Cryptographic Libraries:
   - Hashing: Blake2
   - KDF: Argon2
@@ -55,6 +57,7 @@ Cryptographic Libraries:
   - Cryptography: ed25519-dalek, secp256k1
 Security: Zeroize for secure memory wiping
 # Architecture
+``` bash
 src/
 ├── lib.rs                 # Library entry point
 ├── main.rs               # CLI entry point
@@ -63,7 +66,7 @@ src/
 ├── crypto/               # Cryptographic operations
 │   ├── mod.rs
 │   ├── aes_encryptor.rs  # AES encryption/decryption
-│   └── hash_engine.rs    # Hashing algorithms (Blake2, SHA2)
+│   └── hash_engine.rs    # Hashing algorithms (Blake2)
 │
 ├── key_derivation/       # Visual key generation system
 │   ├── mod.rs
@@ -83,6 +86,7 @@ src/
     ├── wallet.rs         # Main wallet structure and logic
     ├── wallet_builder.rs # Wallet creation and recovery
     └── signer.rs         # Transaction signing operations
+```
 ### Core Modules Overview
 
 - **`crypto/`** - Low-level cryptographic primitives
